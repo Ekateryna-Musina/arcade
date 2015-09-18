@@ -39,8 +39,8 @@ Enemy.prototype.update = function(dt) {
 };
 
 //Player class
-var Player = function(x, y) {
-    Entity.call(this, x, y, "images/char-boy.png");
+var Player = function(x, y, image) {
+    Entity.call(this, x, y, image ? image : "images/char-boy.png");
 };
 
 Player.prototype = Object.create(Entity.prototype, {

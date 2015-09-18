@@ -37,10 +37,18 @@ var Engine = (function(global) {
     var playerInitYPos = 6;
     var playerXPos = 3;
     var playerYPos = playerInitYPos;
+    var playerImage;
+
     var intersectionLevel = 20;
     var animationRequestID;
+    var score = 0;
+    var heart = 0;
+    var keys = 0;
 
+    var numStones = 3;
     var started = false;
+
+    var stones = [];
 
     canvas.width = numCols * xBlockLength;
     canvas.height = numRows * xBlockLength;
@@ -56,6 +64,7 @@ var Engine = (function(global) {
     function getRandomInt(min, max) {
         return Math.floor(Math.random() * (max - min)) + min;
     }
+
 
     function createEnemy() {
         var x = getXCoordinate(getRandomInt(1, numCols + 1));
@@ -238,6 +247,8 @@ var Engine = (function(global) {
         });
 
         player.render(ctx);
+
+        stones.forEach(function(){this.render(ctx);});
     }
 
     /* This function does nothing but it could have been a good place to
@@ -247,14 +258,60 @@ var Engine = (function(global) {
     function reset() {
         generatePlayer();
         generateEnemies();
+        generateStones();
+    }
+
+    function getRandomCoordinates(xMin, xMax, yMin, yMax, exclude) {
+        var a = getRandomInt(xMin, xMax);
+        var b = getRandomInt(yMin, yMax);
+
+        if (exclude.indexOf({
+                "x": a,
+                "y": b
+            }) > -1) {
+            return getRandomCoordinates(xMin, xMax, yMin, yMax, exclude);
+        }
+
+        return {
+            "x": a,
+            "y": b
+        };
+    }
+
+    function generateStones() {
+        var exclude = [];
+        exclude.push({"x": playerXPos,"y": playerXPos});
+
+        for (var i = 0; i < numStones; i++) {
+            var randomCoordinates = getRandomCoordinates(1, numCols + 1, 5,6, exclude);
+            var x = getXCoordinate(randomCoordinates.x);
+            var y = getYCoordinate(randomCoordinates.y) - 10;
+
+            var stone = new Entity(x, y, "images/stone-block.png");
+            stones.push(stone);
+            exclude.push(randomCoordinates);
+        }
+    }
+
+    function renderHeart() {
+
+    }
+
+    function renderKey() {
+
     }
 
     function generatePlayer() {
-        player = new Player(getXCoordinate(playerXPos), getYCoordinate(playerYPos));
+        player = new Player(getXCoordinate(playerXPos), getYCoordinate(playerYPos), playerImage);
 
         document.addEventListener('keyup', function(e) {
             updatePlayerPosition(e.keyCode);
             player.move(getXCoordinate(playerXPos), getYCoordinate(playerYPos));
+            if (playerYPos == 1) {
+                stopGame();
+                score = 100;
+                $("#score").text(score);
+            }
         });
     }
 
@@ -296,6 +353,19 @@ var Engine = (function(global) {
         }
     }
 
+    function stopGame() {
+        started = false;
+        $(this).text("Start");
+        win.cancelAnimationFrame(animationRequestID);
+        renderField();
+    }
+
+    function startGame() {
+        started = true;
+        main();
+        $(this).text("Stop");
+    }
+
     /* Go ahead and load all of the images we know we're going to need to
      * draw our game level. Then set init as the callback method, so that when
      * all of these images are properly loaded our game will start.
@@ -305,7 +375,17 @@ var Engine = (function(global) {
         'images/water-block.png',
         'images/grass-block.png',
         'images/enemy-bug.png',
-        'images/char-boy.png'
+        'images/char-boy.png',
+        'images/char-cat-girl.png',
+        'images/char-horn-girl.png',
+        'images/char-pink-girl.png',
+        'images/char-princess-girl.png',
+        'images/Gem Blue.png',
+        'images/Gem Green.png',
+        'images/Gem Orange.png',
+        'images/Heart.png',
+        'images/Key.png',
+        'images/Star.png'
     ]);
     Resources.onReady(init);
 
@@ -317,24 +397,24 @@ var Engine = (function(global) {
 
     $("#startGame").bind("click", function() {
         if (started) {
-            started = false;
-            $(this).text("Start");
-            win.cancelAnimationFrame(animationRequestID);
-            renderField();
+            stopGame();
             return;
         }
-        started = true;
-        main();
-        $(this).text("Stop");
+        startGame();
     });
 
-    $("#rowCount").text(numRows);
-    $("#rowCount").bind("change", function() {
-        numRows = $(this).val();
+    $("#score").text(score);
+
+    $("#carousel").carousel({
+        interval: false
     });
-    $("#columnCount").text(numCols);
-    $("#columnCount").bind("change", function() {
-        numCols = $(this).val();
+
+    $('#myModal').on('hidden.bs.modal', function(e) {
+        var image = $(".item.active img")[0];
+        if (image) {
+            playerImage = $(image).attr("src");
+            generatePlayer();
+        }
     });
 
 })(this);
