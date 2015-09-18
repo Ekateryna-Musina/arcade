@@ -1,23 +1,12 @@
 // General game entity class that
 // encapsulates common methods and properties for players and enemies.
+
 var Entity = function(x, y, sprite) {
     this.sprite = sprite;
     this.x = x;
     this.y = y;
 };
 
-// Rendering entity
-Entity.prototype.render = function(canvasContext) {
-    canvasContext.drawImage(Resources.get(this.sprite), this.x, this.y);
-};
-
-// Getting entity position
-Entity.prototype.getPosition = function() {
-    return {
-        "x": this.x,
-        "y": this.y
-    };
-};
 
 // Enemy class, inherits Entity
 var Enemy = function(x, y, speed) {
@@ -41,6 +30,8 @@ Enemy.prototype.update = function(dt) {
 //Player class
 var Player = function(x, y, image) {
     Entity.call(this, x, y, image ? image : "images/char-boy.png");
+    this.xInit = x;
+    this.yInit = y;
 };
 
 Player.prototype = Object.create(Entity.prototype, {
@@ -55,4 +46,10 @@ Player.prototype = Object.create(Entity.prototype, {
 Player.prototype.move = function(newx, newy) {
     this.x = newx;
     this.y = newy;
+};
+
+Player.prototype.reset = function() {
+    this.x = this.xInit;
+    this.y = this.yInit;
+    this.move(this.x, this.y);
 };

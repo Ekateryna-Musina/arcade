@@ -34,9 +34,8 @@ var Engine = (function(global) {
     var player;
     var aminationRequestID;
 
-    var playerInitYPos = 6;
-    var playerXPos = 3;
-    var playerYPos = playerInitYPos;
+    var playerInitXPosition = 3;
+    var playerInitYPosition = 6;
     var playerImage;
 
     var intersectionLevel = 20;
@@ -44,11 +43,13 @@ var Engine = (function(global) {
     var score = 0;
     var heart = 0;
     var keys = 0;
+    var key;
 
-    var numStones = 3;
+    var numRocks = 3;
     var started = false;
 
-    var stones = [];
+    var rocks = [];
+    var rocksCoordinates = [];
 
     canvas.width = numCols * xBlockLength;
     canvas.height = numRows * xBlockLength;
@@ -56,6 +57,7 @@ var Engine = (function(global) {
     $("#canvas").append(canvas);
 
     function generateEnemies() {
+        allEnemies = [];
         for (var i = 0; i < enemiesCount; i++) {
             allEnemies.push(createEnemy());
         }
@@ -67,13 +69,11 @@ var Engine = (function(global) {
 
 
     function createEnemy() {
-        var x = getXCoordinate(getRandomInt(1, numCols + 1));
-        var y = getYCoordinate(getRandomInt(2, 5)) - 10;
-        return new Enemy(x, y, getRandomInt(2, 15), canvas.width);
+        var x = getRandomInt(1, numCols + 1);
+        var y = getRandomInt(2, 5);
+        return new Enemy(getXCoordinate(x), getYCoordinate(y), getRandomInt(2, 15));
     }
 
-    // The game map has number of columns and rows
-    // it's easy to coordinate entities using chess table
     function getXCoordinate(value) {
         return Math.round((value - 1) * xBlockLength);
     }
@@ -117,7 +117,11 @@ var Engine = (function(global) {
      * game loop.
      */
     function init() {
-        reset();
+        generatePlayer();
+        generateEnemies();
+        generateRocks(player);
+        generateKey();
+
         lastTime = Date.now();
         renderField();
     }
@@ -159,8 +163,7 @@ var Engine = (function(global) {
         var playerY = player.y;
         allEnemies.forEach(function(enemy) {
             if (intersected(enemy, player)) {
-                playerYPos = playerInitYPos;
-                player.y = getYCoordinate(playerInitYPos);
+                player.reset();
             }
         });
     }
@@ -177,10 +180,10 @@ var Engine = (function(global) {
         };
 
         var playerRect = {
-            left: player.x + intersectionLevel,
-            right: player.x + xBlockLength - intersectionLevel,
-            top: player.y + intersectionLevel,
-            bottom: player.y + yBlockLength - intersectionLevel
+            left: getXCoordinate(player.x) + intersectionLevel,
+            right: getXCoordinate(player.x) + xBlockLength - intersectionLevel,
+            top: getYCoordinate(player.y) + intersectionLevel,
+            bottom: getYCoordinate(player.y) + yBlockLength - intersectionLevel
         };
 
         return !(playerRect.left > enemyRect.right ||
@@ -242,13 +245,18 @@ var Engine = (function(global) {
         /* Loop through all of the objects within the allEnemies array and call
          * the render function you have defined.
          */
-        allEnemies.forEach(function(enemy) {
-            enemy.render(ctx);
-        });
+        allEnemies.forEach(renderEntity);
 
-        player.render(ctx);
+        renderEntity(player);
 
-        stones.forEach(function(){this.render(ctx);});
+        rocks.forEach(renderEntity);
+        renderEntity(key);
+    }
+
+    function renderEntity(entity) {
+        var isEnemy = entity instanceof Enemy;
+        ctx.drawImage(Resources.get(entity.sprite), isEnemy ? entity.x : getXCoordinate(entity.x),
+            isEnemy ? entity.y : getYCoordinate(entity.y));
     }
 
     /* This function does nothing but it could have been a good place to
@@ -256,19 +264,17 @@ var Engine = (function(global) {
      * those sorts of things. It's only called once by the init() method.
      */
     function reset() {
-        generatePlayer();
-        generateEnemies();
-        generateStones();
+        player.reset();
+        generateRocks(player);
+        renderField();
     }
+
 
     function getRandomCoordinates(xMin, xMax, yMin, yMax, exclude) {
         var a = getRandomInt(xMin, xMax);
         var b = getRandomInt(yMin, yMax);
 
-        if (exclude.indexOf({
-                "x": a,
-                "y": b
-            }) > -1) {
+        if (exclude && exclude.indexOf(concatXY(a, b)) > -1) {
             return getRandomCoordinates(xMin, xMax, yMin, yMax, exclude);
         }
 
@@ -278,19 +284,35 @@ var Engine = (function(global) {
         };
     }
 
-    function generateStones() {
+    function generateRocks(player) {
+        rocks = [];
+        rocksCoordinates = [];
         var exclude = [];
-        exclude.push({"x": playerXPos,"y": playerXPos});
+        exclude.push(concatXY(player.x, player.y));
 
-        for (var i = 0; i < numStones; i++) {
-            var randomCoordinates = getRandomCoordinates(1, numCols + 1, 5,6, exclude);
-            var x = getXCoordinate(randomCoordinates.x);
-            var y = getYCoordinate(randomCoordinates.y) - 10;
+        for (var i = 0; i < numRocks; i++) {
+            var randomCoordinates = getRandomCoordinates(1, numCols + 1, 5, 7, exclude);
 
-            var stone = new Entity(x, y, "images/stone-block.png");
-            stones.push(stone);
-            exclude.push(randomCoordinates);
+            var rock = new Entity(randomCoordinates.x, randomCoordinates.y, "images/Rock.png");
+            rocks.push(rock);
+            rocksCoordinates.push(concatXY(rock.x, rock.y));
+            exclude.push(concatXY(randomCoordinates.x, randomCoordinates.y));
         }
+    }
+
+    function generateKey() {
+        var randomCoordinates = getRandomCoordinates(1, numCols + 1, 2, 5);
+        key = new Entity(randomCoordinates.x, randomCoordinates.y, "images/Key.png");
+    }
+
+    function resetKey() {
+        var randomCoordinates = getRandomCoordinates(1, numCols + 1, 2, 5, [concatXY(key.x, key.y)]);
+        key.x = randomCoordinates.x;
+        key.y = randomCoordinates.y;
+    }
+
+    function concatXY(x, y) {
+        return x.toString().concat(",").concat(y.toString());
     }
 
     function renderHeart() {
@@ -302,20 +324,18 @@ var Engine = (function(global) {
     }
 
     function generatePlayer() {
-        player = new Player(getXCoordinate(playerXPos), getYCoordinate(playerYPos), playerImage);
+        player = new Player(playerInitXPosition, playerInitYPosition, playerImage);
 
         document.addEventListener('keyup', function(e) {
             updatePlayerPosition(e.keyCode);
-            player.move(getXCoordinate(playerXPos), getYCoordinate(playerYPos));
-            if (playerYPos == 1) {
-                stopGame();
-                score = 100;
-                $("#score").text(score);
-            }
         });
     }
 
+
     function updatePlayerPosition(keyCode) {
+        var playerXPos = player.x;
+        var playerYPos = player.y;
+
         var allowedKeys = {
             37: 'left',
             38: 'up',
@@ -323,47 +343,61 @@ var Engine = (function(global) {
             40: 'down'
         };
 
-        if (keyCode == 37) {
-            if (playerXPos > 1) {
-                playerXPos = playerXPos - 1;
-            }
+        switch (keyCode) {
+            case 37:
+                if (playerXPos > 1) {
+                    playerXPos = playerXPos - 1;
+                }
+                break;
+
+            case 38:
+                if (playerYPos > 1) {
+                    playerYPos = playerYPos - 1;
+                }
+                break;
+
+            case 39:
+                if (playerXPos < numCols) {
+                    playerXPos = playerXPos + 1;
+                }
+                break;
+
+            case 40:
+                if (playerYPos < numRows) {
+                    playerYPos = playerYPos + 1;
+                }
+                break;
+        }
+        if (rocksCoordinates.indexOf(concatXY(playerXPos, playerYPos)) > -1) {
             return;
         }
-
-        if (keyCode == 39) {
-            if (playerXPos < numCols) {
-                playerXPos = playerXPos + 1;
+        if (key.x === playerXPos && key.y === playerYPos) {
+            keys++;
+            if (keys === 3) {
+                hearts++;
+                resetKey();
             }
-            return;
         }
 
-
-        if (keyCode == 38) {
-            if (playerYPos > 1) {
-                playerYPos = playerYPos - 1;
-            }
-            return;
-        }
-
-        if (keyCode == 40) {
-            if (playerYPos < numRows) {
-                playerYPos = playerYPos + 1;
-            }
-            return;
+        player.move(playerXPos, playerYPos);
+        if (player.y == 1) {
+            stopGame();
+            score = 100;
+            $("#score").text(score);
         }
     }
 
     function stopGame() {
         started = false;
-        $(this).text("Start");
+        $("#startGame").text("Start");
         win.cancelAnimationFrame(animationRequestID);
-        renderField();
+        reset();
     }
 
     function startGame() {
         started = true;
         main();
-        $(this).text("Stop");
+        $("#startGame").text("Stop");
     }
 
     /* Go ahead and load all of the images we know we're going to need to
@@ -385,7 +419,8 @@ var Engine = (function(global) {
         'images/Gem Orange.png',
         'images/Heart.png',
         'images/Key.png',
-        'images/Star.png'
+        'images/Star.png',
+        'images/Rock.png'
     ]);
     Resources.onReady(init);
 
@@ -412,8 +447,7 @@ var Engine = (function(global) {
     $('#myModal').on('hidden.bs.modal', function(e) {
         var image = $(".item.active img")[0];
         if (image) {
-            playerImage = $(image).attr("src");
-            generatePlayer();
+            player.sprite = $(image).attr("src");
         }
     });
 

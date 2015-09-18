@@ -12,6 +12,10 @@ body {
 
 }
 
+.btn{
+    z-index: 1;
+}
+
 .crop{
     width: 200px;
     height: 150px;
@@ -30,6 +34,7 @@ margin-top: -50px;
 
 .canvas{
     margin-top: -30px;
+    z-index: -1;
 }
 
 .heart{
