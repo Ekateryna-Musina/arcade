@@ -53,3 +53,52 @@ Player.prototype.reset = function() {
     this.y = this.yInit;
     this.move(this.x, this.y);
 };
+
+var Key = function(x, y){
+    Entity.call(this, x, y, "images/Key.png");
+}
+
+Key.prototype = Object.create(Entity.prototype, {
+    constructor: {
+        configurable: true,
+        enumerable: true,
+        value: Key,
+        writable: true
+    }
+});
+
+var Rock = function(x, y){
+    Entity.call(this, x, y, "images/Rock.png");
+}
+
+Rock.prototype = Object.create(Entity.prototype, {
+    constructor: {
+        configurable: true,
+        enumerable: true,
+        value: Rock,
+        writable: true
+    }
+});
+
+Key.prototype = Object.create(Entity.prototype, {
+    constructor: {
+        configurable: true,
+        enumerable: true,
+        value: Key,
+        writable: true
+    }
+});
+
+var Gem = function(x, y, image, score){
+    Entity.call(this, x, y, image);
+    this.score = score;
+}
+
+Gem.prototype = Object.create(Entity.prototype, {
+    constructor: {
+        configurable: true,
+        enumerable: true,
+        value: Gem,
+        writable: true
+    }
+});

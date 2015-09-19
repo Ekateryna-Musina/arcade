@@ -43,7 +43,14 @@ var Engine = (function(global) {
     var score = 0;
     var heart = 0;
     var keys = 0;
-    var key;
+    var gems = [];
+
+    var activeGem;
+
+    var numKeys = 3;
+    var numBlueGems = 5;
+    var numGreenGems = 3;
+    var numOrangeGems = 1;
 
     var numRocks = 3;
     var started = false;
@@ -120,10 +127,21 @@ var Engine = (function(global) {
         generatePlayer();
         generateEnemies();
         generateRocks(player);
-        generateKey();
+        generateGems();
 
         lastTime = Date.now();
         renderField();
+        renderStatus();
+    }
+
+    function renderStatus() {
+        ctx.fillStyle = "red";
+        ctx.font = "20px Georgia";
+        ctx.fillText("Scores: " + score, 10, 25);
+
+        for(var i = 0; i < hearts; i++){
+                // ctx.drawImage(Resources.get("images/Heart.png"), col * xBlockLength, row * yBlockLength);
+        }
     }
 
     /* This function is called by main (our game loop) and itself calls all
@@ -201,6 +219,7 @@ var Engine = (function(global) {
     function render() {
         renderField();
         renderEntities();
+        renderStatus();
     }
 
     function renderField() {
@@ -250,13 +269,29 @@ var Engine = (function(global) {
         renderEntity(player);
 
         rocks.forEach(renderEntity);
-        renderEntity(key);
+
+        renderEntity(activeGem);
+    }
+
+    function resetGem() {
+        var index = getRandomInt(0, gems.length);
+        activeGem = gems[index];
     }
 
     function renderEntity(entity) {
+        // if (entity instanceof Key || entity instanceof Gem) {
+        //     ctx.drawImage(Resources.get(entity.sprite), entity.x, entity.y, 60, 80);
+        //     return;
+        // }
+        // if (entity instanceof Rock) {
+        //     ctx.drawImage(Resources.get(entity.sprite), entity.x, entity.y);
+        //     return;
+        // }
+
         var isEnemy = entity instanceof Enemy;
         ctx.drawImage(Resources.get(entity.sprite), isEnemy ? entity.x : getXCoordinate(entity.x),
             isEnemy ? entity.y : getYCoordinate(entity.y));
+
     }
 
     /* This function does nothing but it could have been a good place to
@@ -293,35 +328,44 @@ var Engine = (function(global) {
         for (var i = 0; i < numRocks; i++) {
             var randomCoordinates = getRandomCoordinates(1, numCols + 1, 5, 7, exclude);
 
-            var rock = new Entity(randomCoordinates.x, randomCoordinates.y, "images/Rock.png");
+            var rock = new Rock(randomCoordinates.x, randomCoordinates.y);
             rocks.push(rock);
             rocksCoordinates.push(concatXY(rock.x, rock.y));
             exclude.push(concatXY(randomCoordinates.x, randomCoordinates.y));
         }
     }
 
-    function generateKey() {
-        var randomCoordinates = getRandomCoordinates(1, numCols + 1, 2, 5);
-        key = new Entity(randomCoordinates.x, randomCoordinates.y, "images/Key.png");
-    }
+    function generateGems() {
+        var i = 0;
+        var randomCoordinates;
+        for (i = 0; i < numKeys; i++) {
+            randomCoordinates = getRandomCoordinates(1, numCols + 1, 2, 5);
+            var key = new Key(randomCoordinates.x, randomCoordinates.y);
+            gems.push(key);
+        }
 
-    function resetKey() {
-        var randomCoordinates = getRandomCoordinates(1, numCols + 1, 2, 5, [concatXY(key.x, key.y)]);
-        key.x = randomCoordinates.x;
-        key.y = randomCoordinates.y;
+        for (i = 0; i < numBlueGems; i++) {
+            randomCoordinates = getRandomCoordinates(1, numCols + 1, 2, 5);
+            gems.push(new Gem(randomCoordinates.x, randomCoordinates.y, "images/Gem Blue.png", 10));
+        }
+
+        for (i = 0; i < numGreenGems; i++) {
+            randomCoordinates = getRandomCoordinates(1, numCols + 1, 2, 5);
+            gems.push(new Gem(randomCoordinates.x, randomCoordinates.y, "images/Gem Green.png", 20));
+        }
+
+        for (i = 0; i < numOrangeGems; i++) {
+            randomCoordinates = getRandomCoordinates(1, numCols + 1, 2, 5);
+            gems.push(new Gem(randomCoordinates.x, randomCoordinates.y, "images/Gem Orange.png", 30));
+        }
+
+        resetGem();
     }
 
     function concatXY(x, y) {
         return x.toString().concat(",").concat(y.toString());
     }
 
-    function renderHeart() {
-
-    }
-
-    function renderKey() {
-
-    }
 
     function generatePlayer() {
         player = new Player(playerInitXPosition, playerInitYPosition, playerImage);
@@ -371,12 +415,17 @@ var Engine = (function(global) {
         if (rocksCoordinates.indexOf(concatXY(playerXPos, playerYPos)) > -1) {
             return;
         }
-        if (key.x === playerXPos && key.y === playerYPos) {
-            keys++;
-            if (keys === 3) {
-                hearts++;
-                resetKey();
+        if (activeGem.x === playerXPos && activeGem.y === playerYPos) {
+            if (activeGem instanceof Key) {
+                keys++;
+                if (keys === 3) {
+                    hearts++;
+                }
+            } else {
+                score += activeGem.score;
             }
+
+            resetGem();
         }
 
         player.move(playerXPos, playerYPos);
