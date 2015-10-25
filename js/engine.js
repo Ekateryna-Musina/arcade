@@ -69,7 +69,9 @@ var Engine = (function(global) {
 
     $("#canvas").append(canvas);
 
-    // Generate enemies
+    /**
+    * @description Generate enemies
+    */
     function generateEnemies() {
         allEnemies = [];
         for (var i = 0; i < enemiesCount; i++) {
@@ -77,24 +79,38 @@ var Engine = (function(global) {
         }
     }
 
-    //Gets random coordinates for random entity position
+    /**
+    * @description Gets random coordinates for random entity position
+    * @param {int} min
+    * @param {int} max
+    * @returns {number} Random value between min and max
+    */
     function getRandomInt(min, max) {
         return Math.floor(Math.random() * (max - min)) + min;
     }
 
-    //Greate new entity object
+    /**
+    * @description Greate new entity object
+    * @returns {Enemy}
+    */
     function createEnemy() {
         var x = getRandomInt(1, numCols + 1);
         var y = getRandomInt(2, 5);
         return new Enemy(getXCoordinate(x), getYCoordinate(y), getRandomInt(2, 15));
     }
 
-    //Converts x coordinate to square number
+    /**
+    * @description Converts x coordinate to square number
+    * @returns {int} square number
+    */
     function getXCoordinate(value) {
         return Math.round((value - 1) * xBlockLength);
     }
 
-    //Converts y coordinate to square number
+    /**
+    * @description Converts y coordinate to square number
+    * @returns {int} square number
+    */
     function getYCoordinate(value) {
         return Math.round((value - 1) * yBlockLength) - 10;
     }
@@ -144,7 +160,9 @@ var Engine = (function(global) {
         renderStatus();
     }
 
-    //Renders the score number
+    /**
+    * @description Renders the score number
+    */
     function renderStatus() {
         $("#score .badge").text(score);
     }
@@ -181,7 +199,9 @@ var Engine = (function(global) {
         });
     }
 
-    // Checks collisions between player and enemies
+    /**
+    * @description Checks collisions between player and enemies
+    */
     function checkCollisions() {
         var playerX = player.x;
         var playerY = player.y;
@@ -192,9 +212,10 @@ var Engine = (function(global) {
         });
     }
 
-    // Check intersection of player and enemies
-    // for intersection accuracy I've introduced intersectionLevel value
-    // so that to avoid inacurate player collision
+    /*  Check intersection of player and enemies
+    *   for intersection accuracy I've introduced intersectionLevel value
+    *   so that to avoid inacurate player collision
+    */
     function intersected(enemy, player) {
         var enemyRect = {
             left: enemy.x,
@@ -228,7 +249,9 @@ var Engine = (function(global) {
         renderStatus();
     }
 
-    //Renders game field
+    /**
+    * @description Renders game field
+    */
     function renderField() {
         /* This array holds the relative URL to the image used
          * for that particular row of the game level.
@@ -288,8 +311,10 @@ var Engine = (function(global) {
         activeGem = gems[index];
     }
 
-    //Renders entities
-    function renderEntity(entity) {     
+    /**
+        @description Renders entities
+    */
+    function renderEntity(entity) {
         var isEnemy = entity instanceof Enemy;
         ctx.drawImage(Resources.get(entity.sprite), isEnemy ? entity.x : getXCoordinate(entity.x),
             isEnemy ? entity.y : getYCoordinate(entity.y));
@@ -306,8 +331,14 @@ var Engine = (function(global) {
         renderField();
     }
 
-
-    //Gets random coordinates between minumum and maximum of x and y but excludes existing one
+    /**
+    * @description Gets random coordinates between minumum and maximum of x and y but excludes existing one
+    * @param {int} xMin
+    * @param {int} xMax
+    * @param {int} yMin
+    * @param {int} yMax
+    * @returns {object}
+    */
     function getRandomCoordinates(xMin, xMax, yMin, yMax, exclude) {
         var a = getRandomInt(xMin, xMax);
         var b = getRandomInt(yMin, yMax);
@@ -322,7 +353,9 @@ var Engine = (function(global) {
         };
     }
 
-    //Generates the rocks
+    /*
+        Generates the rocks, avoiding player position
+     */
     function generateRocks(player) {
         rocks = [];
         rocksCoordinates = [];
@@ -339,7 +372,9 @@ var Engine = (function(global) {
         }
     }
 
-    //Generate gems randomly
+    /*
+        Generates gems randomly
+     */
     function generateGems() {
         var i = 0;
         var randomCoordinates;
@@ -367,12 +402,19 @@ var Engine = (function(global) {
         resetGem();
     }
 
-    //Concatenation x and y into string 
+    /**
+    * @description Concatenates x and y into string
+    * @param {int} x
+    * @param {int} y
+    * @returns {number} Sum of a and b
+    */
     function concatXY(x, y) {
         return x.toString().concat(",").concat(y.toString());
     }
 
-    //Generate player
+    /*
+        Generates player
+     */
     function generatePlayer() {
         player = new Player(playerInitXPosition, playerInitYPosition, playerImage);
 
@@ -381,7 +423,11 @@ var Engine = (function(global) {
         });
     }
 
-    //Updates player position wwhen key pressed
+    //
+     /**
+    * @description Updates player position when key pressed
+    * @param {int} keyCode
+    */
     function updatePlayerPosition(keyCode) {
         var playerXPos = player.x;
         var playerYPos = player.y;
@@ -446,15 +492,19 @@ var Engine = (function(global) {
         }
     }
 
-    //Stop game 
+    /*
+        Stops game
+     */
     function stopGame() {
         started = false;
         $("#startGame").text("Start");
         win.cancelAnimationFrame(animationRequestID);
         reset();
     }
-    
-    //Start game
+
+    /*
+        Starts game
+     */
     function startGame() {
         started = true;
         main();
