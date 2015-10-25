@@ -61,8 +61,15 @@ var Engine = (function(global) {
     canvas.width = numCols * xBlockLength;
     canvas.height = numRows * xBlockLength;
 
+    /* Assign the canvas' context object to the global variable (the window
+     * object when run in a browser) so that developer's can use it more easily
+     * from within their app.js files.
+     */
+    global.ctx = ctx;
+
     $("#canvas").append(canvas);
 
+    // Generate enemies
     function generateEnemies() {
         allEnemies = [];
         for (var i = 0; i < enemiesCount; i++) {
@@ -70,21 +77,24 @@ var Engine = (function(global) {
         }
     }
 
+    //Gets random coordinates for random entity position
     function getRandomInt(min, max) {
         return Math.floor(Math.random() * (max - min)) + min;
     }
 
-
+    //Greate new entity object
     function createEnemy() {
         var x = getRandomInt(1, numCols + 1);
         var y = getRandomInt(2, 5);
         return new Enemy(getXCoordinate(x), getYCoordinate(y), getRandomInt(2, 15));
     }
 
+    //Converts x coordinate to square number
     function getXCoordinate(value) {
         return Math.round((value - 1) * xBlockLength);
     }
 
+    //Converts y coordinate to square number
     function getYCoordinate(value) {
         return Math.round((value - 1) * yBlockLength) - 10;
     }
@@ -134,14 +144,9 @@ var Engine = (function(global) {
         renderStatus();
     }
 
+    //Renders the score number
     function renderStatus() {
-        ctx.fillStyle = "red";
-        ctx.font = "20px Georgia";
-        ctx.fillText("Scores: " + score, 10, 25);
-
-        for(var i = 0; i < hearts; i++){
-                // ctx.drawImage(Resources.get("images/Heart.png"), col * xBlockLength, row * yBlockLength);
-        }
+        $("#score .badge").text(score);
     }
 
     /* This function is called by main (our game loop) and itself calls all
@@ -176,6 +181,7 @@ var Engine = (function(global) {
         });
     }
 
+    // Checks collisions between player and enemies
     function checkCollisions() {
         var playerX = player.x;
         var playerY = player.y;
@@ -222,6 +228,7 @@ var Engine = (function(global) {
         renderStatus();
     }
 
+    //Renders game field
     function renderField() {
         /* This array holds the relative URL to the image used
          * for that particular row of the game level.
@@ -273,21 +280,16 @@ var Engine = (function(global) {
         renderEntity(activeGem);
     }
 
+    /*Resets gems
+      generate index of gem randomly and  replace active gem with the new one
+    */
     function resetGem() {
         var index = getRandomInt(0, gems.length);
         activeGem = gems[index];
     }
 
-    function renderEntity(entity) {
-        // if (entity instanceof Key || entity instanceof Gem) {
-        //     ctx.drawImage(Resources.get(entity.sprite), entity.x, entity.y, 60, 80);
-        //     return;
-        // }
-        // if (entity instanceof Rock) {
-        //     ctx.drawImage(Resources.get(entity.sprite), entity.x, entity.y);
-        //     return;
-        // }
-
+    //Renders entities
+    function renderEntity(entity) {     
         var isEnemy = entity instanceof Enemy;
         ctx.drawImage(Resources.get(entity.sprite), isEnemy ? entity.x : getXCoordinate(entity.x),
             isEnemy ? entity.y : getYCoordinate(entity.y));
@@ -305,6 +307,7 @@ var Engine = (function(global) {
     }
 
 
+    //Gets random coordinates between minumum and maximum of x and y but excludes existing one
     function getRandomCoordinates(xMin, xMax, yMin, yMax, exclude) {
         var a = getRandomInt(xMin, xMax);
         var b = getRandomInt(yMin, yMax);
@@ -319,6 +322,7 @@ var Engine = (function(global) {
         };
     }
 
+    //Generates the rocks
     function generateRocks(player) {
         rocks = [];
         rocksCoordinates = [];
@@ -335,6 +339,7 @@ var Engine = (function(global) {
         }
     }
 
+    //Generate gems randomly
     function generateGems() {
         var i = 0;
         var randomCoordinates;
@@ -362,11 +367,12 @@ var Engine = (function(global) {
         resetGem();
     }
 
+    //Concatenation x and y into string 
     function concatXY(x, y) {
         return x.toString().concat(",").concat(y.toString());
     }
 
-
+    //Generate player
     function generatePlayer() {
         player = new Player(playerInitXPosition, playerInitYPosition, playerImage);
 
@@ -375,7 +381,7 @@ var Engine = (function(global) {
         });
     }
 
-
+    //Updates player position wwhen key pressed
     function updatePlayerPosition(keyCode) {
         var playerXPos = player.x;
         var playerYPos = player.y;
@@ -432,17 +438,23 @@ var Engine = (function(global) {
         if (player.y == 1) {
             stopGame();
             score = 100;
-            $("#score").text(score);
+            $("#score .badge").text(score);
+
+            ctx.fillStyle = "white";
+            ctx.font = "40px Georgia";
+            ctx.fillText("Congratulations!!!", 120, 100);
         }
     }
 
+    //Stop game 
     function stopGame() {
         started = false;
         $("#startGame").text("Start");
         win.cancelAnimationFrame(animationRequestID);
         reset();
     }
-
+    
+    //Start game
     function startGame() {
         started = true;
         main();
@@ -473,11 +485,6 @@ var Engine = (function(global) {
     ]);
     Resources.onReady(init);
 
-    /* Assign the canvas' context object to the global variable (the window
-     * object when run in a browser) so that developer's can use it more easily
-     * from within their app.js files.
-     */
-    global.ctx = ctx;
 
     $("#startGame").bind("click", function() {
         if (started) {
@@ -487,7 +494,7 @@ var Engine = (function(global) {
         startGame();
     });
 
-    $("#score").text(score);
+    $("#score .badge").text(score);
 
     $("#carousel").carousel({
         interval: false

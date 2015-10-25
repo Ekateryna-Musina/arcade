@@ -54,6 +54,7 @@ Player.prototype.reset = function() {
     this.move(this.x, this.y);
 };
 
+//Key class , inherits entity 
 var Key = function(x, y){
     Entity.call(this, x, y, "images/Key.png");
 }
@@ -76,15 +77,6 @@ Rock.prototype = Object.create(Entity.prototype, {
         configurable: true,
         enumerable: true,
         value: Rock,
-        writable: true
-    }
-});
-
-Key.prototype = Object.create(Entity.prototype, {
-    constructor: {
-        configurable: true,
-        enumerable: true,
-        value: Key,
         writable: true
     }
 });
