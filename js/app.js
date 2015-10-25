@@ -38,7 +38,7 @@ Enemy.prototype = Object.create(Entity.prototype, {
 * @param {int} newy
 */
 Enemy.prototype.update = function(dt) {
-    this.x = this.x + this.speed;
+    this.x = this.x + this.speed*dt*50;
 };
 
 /**
